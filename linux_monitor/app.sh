@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Función para listar procesos en formato JSON
+# Función para listar procesos en formato HTML que están en estado "Running"
 get_process_table() {
-    ps -eo pid,comm,%mem,%cpu --sort=-%mem | awk 'NR==1{print "["} NR>1{printf "%s{\"pid\":\"%s\",\"name\":\"%s\",\"mem\":\"%s\",\"cpu\":\"%s\"}", sep, $1, $2, $3, $4; sep=",\n"} END{print "\n]"}'
+    echo "<table><tr><th>PID</th><th>Nombre</th><th>% Memoria</th><th>% CPU</th><th>Acción</th></tr>"
+    ps -eo pid,comm,state,%mem,%cpu --sort=-%mem | awk '$3 == "R" {printf "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td><button class=\"terminate-btn\" onclick=\"terminateProcess(%s)\">Terminar</button></td></tr>\n", $1, $2, $4, $5, $1}'
+    echo "</table>"
 }
 
 # Función para terminar un proceso por su ID

@@ -71,6 +71,12 @@
         grid-area: operations;
         align-items: start;
         height: 100%;
+        overflow-y: auto;
+      }
+
+      .grid .item:nth-child(3) {
+        scrollbar-width: thin; /* Para Firefox */
+        scrollbar-color: #333 #191919;
       }
 
       #processes {
@@ -147,6 +153,7 @@
   </head>
   <body>
     <div id="error-message" style="color: red; font-weight: bold"></div>
+    <div id="success-message" style="color: green; font-weight: bold"></div>
 
     <div class="grid">
       <!-- Información de la herramienta -->
@@ -166,16 +173,22 @@
       <div id="processes" class="item">
         <!-- Aquí se cargará dinámicamente la tabla de procesos -->
         <script>
-          fetch('/processes')
-            .then((response) => response.text())
-            .then((html) => {
-              document.getElementById('processes').innerHTML = html;
-            })
-            .catch((error) => {
-              console.error('Error al obtener procesos:', error);
-              document.getElementById('processes').innerHTML =
-                'Error al cargar los procesos.';
-            });
+          function fetchProcesses() {
+            fetch("/processes")
+              .then((response) => response.text())
+              .then((html) => {
+                document.getElementById("processes").innerHTML = html;
+              })
+              .catch((error) => {
+                console.error("Error al obtener procesos:", error);
+                document.getElementById("processes").innerHTML =
+                  "Error al cargar los procesos.";
+              });
+          }
+
+          fetchProcesses();
+
+          setInterval(fetchProcesses, 5000);
         </script>
       </div>
 
@@ -185,20 +198,20 @@
         <p style="font-size: small; color: #aeaeae">
           Aquí se muestra el historial de operaciones realizadas en el sistema.
         </p>
-        <ul id="operation-list" style="list-style: none;"></ul>
+        <ul id="operation-list" style="list-style: none"></ul>
       </div>
     </div>
   </body>
 
   <script>
     // Cargar el historial desde localStorage al cargar la página
-    document.addEventListener('DOMContentLoaded', () => {
-      const operationList = document.getElementById('operation-list');
-      const history = JSON.parse(localStorage.getItem('history')) || [];
+    document.addEventListener("DOMContentLoaded", () => {
+      const operationList = document.getElementById("operation-list");
+      const history = JSON.parse(localStorage.getItem("history")) || [];
 
       // Mostrar cada mensaje de historial
       history.forEach((message) => {
-        const li = document.createElement('li');
+        const li = document.createElement("li");
         li.textContent = message;
         operationList.appendChild(li);
       });
@@ -206,9 +219,9 @@
 
     function terminateProcess(pid) {
       fetch(`/terminate`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ pid: pid }),
       })
@@ -217,24 +230,37 @@
           if (data.success) {
             const message = `Proceso ${pid} terminado correctamente a las ${new Date().toLocaleString()}.`;
 
-            const li = document.createElement('li');
+            // Mostrar mensaje de éxito
+            const successMessage = document.getElementById("success-message");
+            successMessage.innerText = message;
+            successMessage.style.display = "block";
+
+            // Ocultar el mensaje después de 3 segundos
+            setTimeout(() => {
+              successMessage.style.display = "none";
+            }, 3000);
+
+            // Actualizar el historial
+            const li = document.createElement("li");
             li.textContent = message;
-            document.getElementById('operation-list').appendChild(li);
+            document.getElementById("operation-list").appendChild(li);
 
-            const history =
-              JSON.parse(localStorage.getItem('history')) || [];
+            const history = JSON.parse(localStorage.getItem("history")) || [];
             history.push(message);
-            localStorage.setItem('history', JSON.stringify(history));
+            localStorage.setItem("history", JSON.stringify(history));
 
-            location.reload();
+            // Opcional: recargar los procesos
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
           } else {
-            document.getElementById('error-message').innerText = data.error;
+            document.getElementById("error-message").innerText = data.error;
           }
         })
         .catch((error) => {
-          document.getElementById('error-message').innerText =
-            'Error al conectar con el servidor.';
-          console.error('Error:', error);
+          document.getElementById("error-message").innerText =
+            "Error al conectar con el servidor.";
+          console.error("Error:", error);
         });
     }
   </script>

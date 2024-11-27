@@ -1,8 +1,7 @@
 # app.ps1
 
 function Get-ProcessTable {
-    # Genera una tabla HTML con los procesos activos
-    $processes = Get-Process | Select-Object Id, ProcessName, CPU, WorkingSet
+    $processes = Get-Process | Where-Object { $_.Responding } | Select-Object Id, ProcessName, CPU, WorkingSet
     $html = "<table><tr><th>PID</th><th>Nombre</th><th>CPU</th><th>Memoria</th><th>Accion</th></tr>"
 
     foreach ($process in $processes) {
