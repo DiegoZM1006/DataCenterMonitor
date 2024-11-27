@@ -11,10 +11,12 @@ function Get-ProcessTable {
     }
 
     $html += "</table>"
-    return $html
+
+    # Usar Write-Output para enviar el resultado a la salida estándar
+    Write-Output $html
 }
 
-function Terminate-ProcessById {
+function Stop-ProcessById {
     param (
         [Parameter(Mandatory=$true)]
         [ValidateRange(1, [int]::MaxValue)]
@@ -39,4 +41,4 @@ function Terminate-ProcessById {
     }
 }
 
-# Export-ModuleMember -Function Get-ProcessTable, Terminate-ProcessById
+# Export-ModuleMember -Function Get-ProcessTable, Stop-ProcessById

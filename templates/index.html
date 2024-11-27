@@ -73,34 +73,30 @@
         height: 100%;
       }
 
-      /* Estilos para la barra de desplazamiento */
       #processes {
-        /* Asegura que la barra de desplazamiento tenga el ancho deseado */
         scrollbar-width: thin; /* Para Firefox */
-        scrollbar-color: #333 #191919; /* Para Firefox - Color del thumb y track */
+        scrollbar-color: #333 #191919;
       }
 
-      /* Para Chrome, Edge y Safari */
       #processes::-webkit-scrollbar {
-        width: 8px; /* Ancho de la barra */
+        width: 8px;
       }
 
       #processes::-webkit-scrollbar-track {
-        background: #191919; /* Color del fondo - igual al fondo de tus items */
+        background: #191919;
         border-radius: 4px;
       }
 
       #processes::-webkit-scrollbar-thumb {
-        background: #333; /* Color de la barra */
+        background: #333;
         border-radius: 4px;
         transition: background 0.2s;
       }
 
       #processes::-webkit-scrollbar-thumb:hover {
-        background: #444; /* Color de la barra al pasar el mouse */
+        background: #444;
       }
 
-      /* Estilos de tabla mejorados */
       table {
         width: 90%;
         border-collapse: collapse;
@@ -136,16 +132,16 @@
       .terminate-btn:hover {
         background-color: #c82333;
       }
-      
+
       #operation-list {
         max-height: 100%;
         overflow-y: auto;
         padding: 0;
+      }
 
-        li {
-          padding: 8px 2px;
-          font-size: small;
-        }
+      li {
+        padding: 8px 2px;
+        font-size: small;
       }
     </style>
   </head>
@@ -153,6 +149,7 @@
     <div id="error-message" style="color: red; font-weight: bold"></div>
 
     <div class="grid">
+      <!-- Información de la herramienta -->
       <div id="tool-info" class="item">
         <img
           src="https://upload.wikimedia.org/wikipedia/commons/2/2f/PowerShell_5.0_icon.png"
@@ -165,12 +162,28 @@
         </p>
       </div>
 
-      <div id="processes" class="item">{{processTable}}</div>
+      <!-- Lista de procesos -->
+      <div id="processes" class="item">
+        <!-- Aquí se cargará dinámicamente la tabla de procesos -->
+        <script>
+          fetch('/processes')
+            .then((response) => response.text())
+            .then((html) => {
+              document.getElementById('processes').innerHTML = html;
+            })
+            .catch((error) => {
+              console.error('Error al obtener procesos:', error);
+              document.getElementById('processes').innerHTML =
+                'Error al cargar los procesos.';
+            });
+        </script>
+      </div>
 
+      <!-- Historial de operaciones -->
       <div id="operations" class="item">
         <h2>Historial</h2>
         <p style="font-size: small; color: #aeaeae">
-          Aqui se muestra el historial de operaciones realizadas en el sistema.
+          Aquí se muestra el historial de operaciones realizadas en el sistema.
         </p>
         <ul id="operation-list" style="list-style: none;"></ul>
       </div>
@@ -179,42 +192,49 @@
 
   <script>
     // Cargar el historial desde localStorage al cargar la página
-    document.addEventListener("DOMContentLoaded", () => {
-      const operationList = document.getElementById("operation-list");
-      const history = JSON.parse(localStorage.getItem("history")) || [];
+    document.addEventListener('DOMContentLoaded', () => {
+      const operationList = document.getElementById('operation-list');
+      const history = JSON.parse(localStorage.getItem('history')) || [];
 
       // Mostrar cada mensaje de historial
       history.forEach((message) => {
-        const li = document.createElement("li");
+        const li = document.createElement('li');
         li.textContent = message;
         operationList.appendChild(li);
       });
     });
 
     function terminateProcess(pid) {
-      fetch(`/terminate?pid=${pid}`)
+      fetch(`/terminate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pid: pid }),
+      })
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
             const message = `Proceso ${pid} terminado correctamente a las ${new Date().toLocaleString()}.`;
 
-            const li = document.createElement("li");
+            const li = document.createElement('li');
             li.textContent = message;
-            document.getElementById("operation-list").appendChild(li);
+            document.getElementById('operation-list').appendChild(li);
 
-            const history = JSON.parse(localStorage.getItem("history")) || [];
+            const history =
+              JSON.parse(localStorage.getItem('history')) || [];
             history.push(message);
-            localStorage.setItem("history", JSON.stringify(history));
+            localStorage.setItem('history', JSON.stringify(history));
 
             location.reload();
           } else {
-            document.getElementById("error-message").innerText = data.error;
+            document.getElementById('error-message').innerText = data.error;
           }
         })
         .catch((error) => {
-          document.getElementById("error-message").innerText =
-            "Error al conectar con el servidor.";
-          console.error("Error:", error);
+          document.getElementById('error-message').innerText =
+            'Error al conectar con el servidor.';
+          console.error('Error:', error);
         });
     }
   </script>
